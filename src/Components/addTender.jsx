@@ -76,17 +76,30 @@ function AddTender() {
     setShowTable(true);
   };
 
-  const handleMultiSig = async (selectedSubmission) => {
-    const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // Replace with your actual contract address
-    const isExecuted = await approveTransaction(contractAddress);
-    const isCount = await getCountApprovals(contractAddress);
-    const isRequiredCount = await getRequiredApprovals(contractAddress);
+  // const handleMultiSig = async (selectedSubmission) => {
+  //   const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // Replace with your actual contract address
+  //   const isExecuted = await approveTransaction(contractAddress);
+  //   const isCount = await getCountApprovals(contractAddress);
+  //   const isRequiredCount = await getRequiredApprovals(contractAddress);
 
-    if (isExecuted && isCount >= isRequiredCount) {
+  //   if (isExecuted && isCount >= isRequiredCount) {
+  //     const { compliance, details } = checkCompliance(selectedSubmission);
+  //     setMultiSigStatus(compliance);
+  //     setComplianceDetails(details);
+  //     setShowModal(true); // Show compliance details after multi-sig
+  //   } else {
+  //     alert("Multi-sig process is still pending!");
+  //   }
+  // };
+
+  const handleMultiSig = (selectedSubmission) => {
+    // Simulate multi-sig contract check
+    const signaturesCollected = 3; // Mock signatures collected count
+    if (signaturesCollected >= 3) {
       const { compliance, details } = checkCompliance(selectedSubmission);
       setMultiSigStatus(compliance);
-      setComplianceDetails(details);
-      setShowModal(true); // Show compliance details after multi-sig
+      setComplianceDetails(details); // Store details for viewing later
+      setShowTable(false)
     } else {
       alert("Multi-sig process is still pending!");
     }
@@ -180,7 +193,7 @@ function AddTender() {
 
         {/* Form */}
         <div className="card p-3">
-          {!showTable && (
+          {!showTable && !multiSigStatus && !showModal &&(
             <form
               onSubmit={handleSubmit}
               className="mx-auto flex w-full max-w-sm flex-col gap-6"
@@ -333,30 +346,50 @@ function AddTender() {
             </table>
           </div>
         )}
-
+     {multiSigStatus && (
+              <div className="mt-4">
+                <h3 className="text-xl font-semibold">
+                  {multiSigStatus}{" "}
+                  <a
+                    href="#"
+                    onClick={() => setShowModal(true)}
+                    className="text-blue-500 underline"
+                  >
+                    View
+                  </a>
+                </h3>
+              </div>
+            )}
         {/* Compliance Modal */}
         {showModal && (
-          <div className="modal">
-            <div className="modal-box">
-              <h2 className="text-xl font-semibold">{multiSigStatus}</h2>
-              <ul>
-                <li>
-                  Compliant areas: {complianceDetails.compliant.join(", ")}
-                </li>
-                <li>
-                  Non-compliant areas:{" "}
-                  {complianceDetails.nonCompliant.join(", ")}
-                </li>
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full">
+            <h2 className="text-2xl font-semibold mb-4">Compliance Details</h2>
+            <div>
+              <h3 className="text-lg font-semibold">Compliant Areas</h3>
+              <ul className="list-disc pl-5">
+                {complianceDetails?.compliant.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
               </ul>
-              <button
-                onClick={() => setShowModal(false)}
-                className="btn btn-secondary mt-4"
-              >
-                Close
-              </button>
+              <h3 className="text-lg font-semibold mt-4">
+                Non-compliant Areas
+              </h3>
+              <ul className="list-disc pl-5">
+                {complianceDetails?.nonCompliant.map((item, index) => (
+                  <li key={index}>{item}</li>
+                ))}
+              </ul>
             </div>
+            <button
+              onClick={() => setShowModal(false)}
+              className="mt-4 btn btn-secondary"
+            >
+              Close
+            </button>
           </div>
-        )}
+        </div>
+      )}
       </div>
     </>
   );
