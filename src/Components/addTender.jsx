@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import approveTransaction from './../ethers.js'
+import approveTransaction from "./../ethers"; // Assume ethers.js handles the multi-sig contract
 
 function AddTender() {
   const [formData, setFormData] = useState({
@@ -12,24 +12,8 @@ function AddTender() {
   });
   const [showTable, setShowTable] = useState(false);
   const [multiSigStatus, setMultiSigStatus] = useState(null);
-  const [complianceDetails, setComplianceDetails] = useState(null); // Track compliance details for modal
-  const [showModal, setShowModal] = useState(false);
-  const [contractExecuted, setContractExecuted] = useState(false);
-  const [selectedRow, setSelectedRow] = useState(null);
-
-  const handleSelect = async (rowIndex) => {
-    // Assuming contractAddress is the deployed multi-sig contract
-    const contractAddress = "0xYourDeployedContractAddress";
-    const isExecuted = await approveTransaction(contractAddress);
-
-    if (isExecuted) {
-      // Show compliance check after approvals
-      checkCompliance(rowIndex);
-      setContractExecuted(true);
-    } else {
-      alert("Waiting for more signatures...");
-    }
-  };
+  const [complianceDetails, setComplianceDetails] = useState(null);
+  const [showModal, setShowModal] = useState(false); // For showing compliance details
 
   // Predefined array with 5 entries
   const submissions = [
@@ -90,13 +74,15 @@ function AddTender() {
     setShowTable(true);
   };
 
-  const handleMultiSig = (selectedSubmission) => {
-    // Simulate multi-sig contract check
-    const signaturesCollected = 3; // Mock signatures collected count
-    if (signaturesCollected >= 3) {
+  const handleMultiSig = async (selectedSubmission) => {
+    const contractAddress = "0xYourContractAddress"; // Replace with your actual contract address
+    const isExecuted = await approveTransaction(contractAddress);
+
+    if (isExecuted) {
       const { compliance, details } = checkCompliance(selectedSubmission);
       setMultiSigStatus(compliance);
-      setComplianceDetails(details); // Store details for viewing later
+      setComplianceDetails(details);
+      setShowModal(true); // Show compliance details after multi-sig
     } else {
       alert("Multi-sig process is still pending!");
     }
@@ -126,32 +112,23 @@ function AddTender() {
     })
     .slice(0, 3);
 
-    const checkCompliance = (rowIndex) => {
-      const selectedEntry = formData[rowIndex];
-      const compliance = checkComplianceStatus(selectedEntry);
-      setSelectedRow({ ...selectedEntry, compliance });
-    };
-  const checkComplianceStatus  = (submission) => {
+  const checkCompliance = (submission) => {
     const target = submissions[0]; // HeyCent
-    // let compliance = 100;
-    const details = {
-      compliant: [],
-      nonCompliant: [],
-    };
+    let compliance = 100;
+    const details = { compliant: [], nonCompliant: [] };
 
-    const compliance = {
-      status: "compliant",
-      details: [],
-    };
-  
-    // Check each field and update compliance status
     if (submission.budget !== target.budget) {
-      compliance.status = "non-compliant";
-      compliance.details.push("Budget mismatch");
+      compliance -= 20;
+      details.nonCompliant.push("Budget");
+    } else {
+      details.compliant.push("Budget");
     }
-    if (submission.duration !==target.duration) {
-      compliance.status = "non-compliant";
-      compliance.details.push("Duration mismatch");
+
+    if (submission.duration !== target.duration) {
+      compliance -= 10;
+      details.nonCompliant.push("Duration");
+    } else {
+      details.compliant.push("Duration");
     }
 
     if (
@@ -185,44 +162,200 @@ function AddTender() {
 
   return (
     <>
-      {contractExecuted ? (
-        <div>
-          {/* Show compliance data here */}
-          {selectedRow?.compliance?.status === "compliant" ? (
-            <div>Compliant: {selectedRow.compliance.details}</div>
-          ) : (
-            <div>Non-Compliant: {selectedRow.compliance.details}</div>
+      <div className="grid place-content-center">
+        <div className="p-6 text-3xl flex">
+          <div className="avatar avatar-ring-secondary size-40">
+            <img
+              src="https://lh3.googleusercontent.com/kLJ-sJyAeopZG6wT3usuXrGx7lFykg_L683arsMJppDuFJ-4fhzsbZ1h38PNyG7PBPU"
+              width={250}
+              alt="South African Government"
+            />
+          </div>
+          <p className="px-6 py-14">South African Government</p>
+        </div>
+
+        {/* Form */}
+        <div className="card p-3">
+          {!showTable && (
+            <form
+              onSubmit={handleSubmit}
+              className="mx-auto flex w-full max-w-sm flex-col gap-6"
+            >
+              <div className="flex flex-col items-center">
+                <h1 className="text-3xl font-semibold">Add Tender</h1>
+                <p className="text-sm">
+                  Please enter the tender's specifications
+                </p>
+              </div>
+              <div className="form-group">
+                <div className="form-field">
+                  <label className="form-label">Budget R(ZAR)</label>
+                  <div className="form-control">
+                    <input
+                      name="budget"
+                      value={formData.budget}
+                      onChange={handleChange}
+                      placeholder="Type here"
+                      type="text"
+                      className="input max-w-full"
+                    />
+                  </div>
+                </div>
+                <div className="form-field">
+                  <label className="form-label">
+                    Duration/Lead Time (No. of Days)
+                  </label>
+                  <div className="form-control">
+                    <input
+                      name="duration"
+                      value={formData.duration}
+                      onChange={handleChange}
+                      placeholder="Type here"
+                      type="number"
+                      className="input max-w-full"
+                    />
+                  </div>
+                </div>
+                <div className="form-field">
+                  <label className="form-label">Material 1 Name</label>
+                  <div className="form-control">
+                    <input
+                      name="material1Name"
+                      value={formData.material1Name}
+                      onChange={handleChange}
+                      placeholder="Type here"
+                      type="text"
+                      className="input max-w-full"
+                    />
+                  </div>
+                </div>
+                <div className="form-field">
+                  <label className="form-label">Material 1 Price</label>
+                  <div className="form-control">
+                    <input
+                      name="material1Price"
+                      value={formData.material1Price}
+                      onChange={handleChange}
+                      placeholder="Type here"
+                      type="number"
+                      className="input max-w-full"
+                    />
+                  </div>
+                </div>
+                <div className="form-field">
+                  <label className="form-label">Material 2 Name</label>
+                  <div className="form-control">
+                    <input
+                      name="material2Name"
+                      value={formData.material2Name}
+                      onChange={handleChange}
+                      placeholder="Type here"
+                      type="text"
+                      className="input max-w-full"
+                    />
+                  </div>
+                </div>
+                <div className="form-field">
+                  <label className="form-label">Material 2 Price</label>
+                  <div className="form-control">
+                    <input
+                      name="material2Price"
+                      value={formData.material2Price}
+                      onChange={handleChange}
+                      placeholder="Type here"
+                      type="number"
+                      className="input max-w-full"
+                    />
+                  </div>
+                </div>
+                <div className="form-field pt-5">
+                  <div className="form-control grid place-content-center">
+                    <button type="submit" className="btn btn-secondary">
+                      Create
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </form>
           )}
         </div>
-      ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Budget</th>
-              <th>Duration</th>
-              <th>Material 1</th>
-              <th>Material 2</th>
-              <th>Select</th>
-            </tr>
-          </thead>
-          <tbody>
-            {formData.map((item, index) => (
-              <tr key={index}>
-                <td>{item.budget}</td>
-                <td>{item.duration}</td>
-                <td>{item.material1Name}</td>
-                <td>{item.material2Name}</td>
-                <td>
-                  <button onClick={() => handleSelect(index)}>Select</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+
+        {/* Table */}
+        {showTable && (
+          <div className="card p-3">
+            <h2 className="text-2xl font-semibold">
+              Top 3 Matching Submissions
+            </h2>
+            <table className="table-auto w-full mt-4">
+              <thead>
+                <tr>
+                  <th className="px-4 py-2">Budget</th>
+                  <th className="px-4 py-2">Duration</th>
+                  <th className="px-4 py-2">Material 1</th>
+                  <th className="px-4 py-2">Material 1 Price</th>
+                  <th className="px-4 py-2">Material 2</th>
+                  <th className="px-4 py-2">Material 2 Price</th>
+                  <th className="px-4 py-2">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredSubmissions.map((submission, index) => (
+                  <tr key={index}>
+                    <td className="border px-4 py-2">{submission.budget}</td>
+                    <td className="border px-4 py-2">{submission.duration}</td>
+                    <td className="border px-4 py-2">
+                      {submission.material1Name}
+                    </td>
+                    <td className="border px-4 py-2">
+                      {submission.material1Price}
+                    </td>
+                    <td className="border px-4 py-2">
+                      {submission.material2Name}
+                    </td>
+                    <td className="border px-4 py-2">
+                      {submission.material2Price}
+                    </td>
+                    <td className="border px-4 py-2">
+                      <button
+                        className="btn btn-primary"
+                        onClick={() => handleMultiSig(submission)}
+                      >
+                        Select
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Compliance Modal */}
+        {showModal && (
+          <div className="modal">
+            <div className="modal-box">
+              <h2 className="text-xl font-semibold">{multiSigStatus}</h2>
+              <ul>
+                <li>
+                  Compliant areas: {complianceDetails.compliant.join(", ")}
+                </li>
+                <li>
+                  Non-compliant areas:{" "}
+                  {complianceDetails.nonCompliant.join(", ")}
+                </li>
+              </ul>
+              <button
+                onClick={() => setShowModal(false)}
+                className="btn btn-secondary mt-4"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </>
   );
 }
-
 
 export default AddTender;

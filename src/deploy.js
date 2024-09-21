@@ -1,18 +1,36 @@
-async function main() {
-    const MultiSig = await ethers.getContractFactory("MultiSig");
-    const multiSig = await MultiSig.deploy([
-        "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",//3
-        "0x90F79bf6EB2c4f870365E785982E1f101E93b906",//4
-        "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65"//5
-    ]);
+import { JsonRpcProvider, Contract } from 'ethers';
 
-    await multiSig.deployed();
-    console.log("MultiSig deployed to:", multiSig.address);
+// MultiSig Contract ABI
+const multiSigABI = [
+  // ABI for the contract (simplified)
+  "function approveAction() public",
+  "function executeAction() public view returns (bool)"
+];
+
+async function connectWallet() {
+  // Connect to a local JSON-RPC provider (no ENS support here)
+  const provider = new JsonRpcProvider("http://127.0.0.1:8545");
+
+  // Get the first account signer from the local node
+  const signer = provider.getSigner(0);
+
+  return { provider, signer };
 }
 
-main()
-    .then(() => process.exit(0))
-    .catch(error => {
-        console.error(error);
-        process.exit(1);
-    });
+async function approveTransaction(contractAddress) {
+  // Ensure the contract address is a valid Ethereum address (no ENS names)
+  const { provider, signer } = await connectWallet();
+
+  // Create the contract instance with the signer
+  const contract = new Contract(contractAddress, multiSigABI, signer);
+  
+  // Approve the action
+  const tx = await contract.approveAction();
+  await tx.wait();
+
+  // Check if all signatures have been collected
+  const isExecuted = await contract.executeAction();
+  return isExecuted;
+}
+
+export default approveTransaction;

@@ -1,5 +1,4 @@
 import { JsonRpcProvider, Contract } from 'ethers';
-import { useState } from 'react';
 
 // MultiSig Contract ABI
 const multiSigABI = [
@@ -9,10 +8,12 @@ const multiSigABI = [
 ];
 
 async function connectWallet() {
-  // Correct the import for JsonRpcProvider
+  // Create a local provider (or point to your specific RPC URL)
   const provider = new JsonRpcProvider("http://127.0.0.1:8545");
-  await provider.send("eth_requestAccounts", []);
-  const signer = provider.getSigner();
+
+  // Get the signer from the provider (usually the first account for local providers)
+  const signer = provider.getSigner(0); // Index 0 refers to the first account
+
   return { provider, signer };
 }
 
