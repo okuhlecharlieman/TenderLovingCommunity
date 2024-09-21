@@ -1,5 +1,5 @@
-// contracts/MultiSig.sol
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.27;
 
 contract MultiSig {
     address[] public approvers;
@@ -9,8 +9,14 @@ contract MultiSig {
 
     event ActionApproved(address approver);
 
-    constructor(address[] memory _approvers) {
-        approvers = _approvers;
+    constructor() {
+    
+        approvers = [
+
+            0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC, // Approver 1
+            0x90F79bf6EB2c4f870365E785982E1f101E93b906, // Approver 2
+            0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65  // Approver 3
+        ];
     }
 
     modifier onlyApprovers() {

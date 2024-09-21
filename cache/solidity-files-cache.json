@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/Users/millicent/Desktop/TenderLovingCommunity/contracts/Lock.sol": {
-      "lastModificationDate": 1726855510318,
-      "contentHash": "186cad00c322c8a32aca6af0c845baba",
+      "lastModificationDate": 1726940347786,
+      "contentHash": "ed8472e4b9d3a130a84c2a236f803b7e",
       "sourceName": "contracts/Lock.sol",
       "solcConfig": {
         "version": "0.8.27",
@@ -31,7 +31,7 @@
       },
       "imports": [],
       "versionPragmas": [
-        "^0.8.0"
+        "^0.8.27"
       ],
       "artifacts": [
         "MultiSig"

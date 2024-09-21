@@ -39,6 +39,8 @@
     ]
   },
   "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.11",
     "tailwindcss": "^3.4.12"
   }
 }

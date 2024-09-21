@@ -1,5 +1,7 @@
 import React, { useState } from "react";
-import approveTransaction from "./../ethers"; // Assume ethers.js handles the multi-sig contract
+import approveTransaction from "./../ethers";
+import getRequiredApprovals from "./../ethers";
+import getCountApprovals from "./../ethers"; // Assume ethers.js handles the multi-sig contract
 
 function AddTender() {
   const [formData, setFormData] = useState({
@@ -75,10 +77,12 @@ function AddTender() {
   };
 
   const handleMultiSig = async (selectedSubmission) => {
-    const contractAddress = "0xYourContractAddress"; // Replace with your actual contract address
+    const contractAddress = "0x5FbDB2315678afecb367f032d93F642f64180aa3"; // Replace with your actual contract address
     const isExecuted = await approveTransaction(contractAddress);
+    const isCount = await getCountApprovals(contractAddress);
+    const isRequiredCount = await getRequiredApprovals(contractAddress);
 
-    if (isExecuted) {
+    if (isExecuted && isCount >= isRequiredCount) {
       const { compliance, details } = checkCompliance(selectedSubmission);
       setMultiSigStatus(compliance);
       setComplianceDetails(details);
