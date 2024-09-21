@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import approveTransaction from './../ethers.js'
 
 function AddTender() {
   const [formData, setFormData] = useState({
@@ -13,6 +14,22 @@ function AddTender() {
   const [multiSigStatus, setMultiSigStatus] = useState(null);
   const [complianceDetails, setComplianceDetails] = useState(null); // Track compliance details for modal
   const [showModal, setShowModal] = useState(false);
+  const [contractExecuted, setContractExecuted] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
+
+  const handleSelect = async (rowIndex) => {
+    // Assuming contractAddress is the deployed multi-sig contract
+    const contractAddress = "0xYourDeployedContractAddress";
+    const isExecuted = await approveTransaction(contractAddress);
+
+    if (isExecuted) {
+      // Show compliance check after approvals
+      checkCompliance(rowIndex);
+      setContractExecuted(true);
+    } else {
+      alert("Waiting for more signatures...");
+    }
+  };
 
   // Predefined array with 5 entries
   const submissions = [
@@ -109,26 +126,32 @@ function AddTender() {
     })
     .slice(0, 3);
 
-  const checkCompliance = (submission) => {
+    const checkCompliance = (rowIndex) => {
+      const selectedEntry = formData[rowIndex];
+      const compliance = checkComplianceStatus(selectedEntry);
+      setSelectedRow({ ...selectedEntry, compliance });
+    };
+  const checkComplianceStatus  = (submission) => {
     const target = submissions[0]; // HeyCent
-    let compliance = 100;
+    // let compliance = 100;
     const details = {
       compliant: [],
       nonCompliant: [],
     };
 
+    const compliance = {
+      status: "compliant",
+      details: [],
+    };
+  
+    // Check each field and update compliance status
     if (submission.budget !== target.budget) {
-      compliance -= 20;
-      details.nonCompliant.push("Budget");
-    } else {
-      details.compliant.push("Budget");
+      compliance.status = "non-compliant";
+      compliance.details.push("Budget mismatch");
     }
-
-    if (submission.duration !== target.duration) {
-      compliance -= 10;
-      details.nonCompliant.push("Duration");
-    } else {
-      details.compliant.push("Duration");
+    if (submission.duration !==target.duration) {
+      compliance.status = "non-compliant";
+      compliance.details.push("Duration mismatch");
     }
 
     if (
@@ -162,218 +185,44 @@ function AddTender() {
 
   return (
     <>
-      <div className="grid place-content-center">
-        <div className="p-6 text-3xl flex">
-          <div className="avatar avatar-ring-secondary size-40">
-            <img
-              src="https://lh3.googleusercontent.com/kLJ-sJyAeopZG6wT3usuXrGx7lFykg_L683arsMJppDuFJ-4fhzsbZ1h38PNyG7PBPU"
-              width={250}
-              alt="South African Government"
-            />
-          </div>
-          <p className="px-6 py-14">South African Government</p>
-        </div>
-        <div className="card p-3">
-          {!showTable && (
-            <form
-              onSubmit={handleSubmit}
-              className="mx-auto flex w-full max-w-sm flex-col gap-6"
-            >
-              <div className="flex flex-col items-center">
-                <h1 className="text-3xl font-semibold">Add Tender</h1>
-                <p className="text-sm">
-                  Please enter the tender's specifications
-                </p>
-              </div>
-              <div className="form-group">
-                <div className="form-field">
-                  <label className="form-label">Budget R(ZAR)</label>
-                  <div className="form-control">
-                    <input
-                      name="budget"
-                      value={formData.budget}
-                      onChange={handleChange}
-                      placeholder="Type here"
-                      type="text"
-                      className="input max-w-full"
-                    />
-                  </div>
-                </div>
-                <div className="form-field">
-                  <label className="form-label">
-                    Duration/Lead Time (No. of Days)
-                  </label>
-                  <div className="form-control">
-                    <input
-                      name="duration"
-                      value={formData.duration}
-                      onChange={handleChange}
-                      placeholder="Type here"
-                      type="number"
-                      className="input max-w-full"
-                    />
-                  </div>
-                </div>
-                <div className="form-field">
-                  <label className="form-label">Material 1 Name</label>
-                  <div className="form-control">
-                    <input
-                      name="material1Name"
-                      value={formData.material1Name}
-                      onChange={handleChange}
-                      placeholder="Type here"
-                      type="text"
-                      className="input max-w-full"
-                    />
-                  </div>
-                </div>
-                <div className="form-field">
-                  <label className="form-label">Material 1 Price</label>
-                  <div className="form-control">
-                    <input
-                      name="material1Price"
-                      value={formData.material1Price}
-                      onChange={handleChange}
-                      placeholder="Type here"
-                      type="number"
-                      className="input max-w-full"
-                    />
-                  </div>
-                </div>
-                <div className="form-field">
-                  <label className="form-label">Material 2 Name</label>
-                  <div className="form-control">
-                    <input
-                      name="material2Name"
-                      value={formData.material2Name}
-                      onChange={handleChange}
-                      placeholder="Type here"
-                      type="text"
-                      className="input max-w-full"
-                    />
-                  </div>
-                </div>
-                <div className="form-field">
-                  <label className="form-label">Material 2 Price</label>
-                  <div className="form-control">
-                    <input
-                      name="material2Price"
-                      value={formData.material2Price}
-                      onChange={handleChange}
-                      placeholder="Type here"
-                      type="number"
-                      className="input max-w-full"
-                    />
-                  </div>
-                </div>
-                <div className="form-field pt-5">
-                  <div className="form-control grid place-content-center">
-                    <button type="submit" className="btn btn-secondary">
-                      Create
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </form>
+      {contractExecuted ? (
+        <div>
+          {/* Show compliance data here */}
+          {selectedRow?.compliance?.status === "compliant" ? (
+            <div>Compliant: {selectedRow.compliance.details}</div>
+          ) : (
+            <div>Non-Compliant: {selectedRow.compliance.details}</div>
           )}
         </div>
-
-        {/* Conditionally render the table after form submission */}
-        {showTable && (
-          <div className="card p-3">
-            <h2 className="text-2xl font-semibold">
-              Top 3 Matching Submissions
-            </h2>
-            <table className="table-auto w-full mt-4">
-              <thead>
-                <tr>
-                  <th className="px-4 py-2">Budget</th>
-                  <th className="px-4 py-2">Duration</th>
-                  <th className="px-4 py-2">Material 1</th>
-                  <th className="px-4 py-2">Material 1 Price</th>
-                  <th className="px-4 py-2">Material 2</th>
-                  <th className="px-4 py-2">Material 2 Price</th>
-                  <th className="px-4 py-2">Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredSubmissions.map((submission, index) => (
-                  <tr key={index}>
-                    <td className="border px-4 py-2">{submission.budget}</td>
-                    <td className="border px-4 py-2">{submission.duration}</td>
-                    <td className="border px-4 py-2">
-                      {submission.material1Name}
-                    </td>
-                    <td className="border px-4 py-2">
-                      {submission.material1Price}
-                    </td>
-                    <td className="border px-4 py-2">
-                      {submission.material2Name}
-                    </td>
-                    <td className="border px-4 py-2">
-                      {submission.material2Price}
-                    </td>
-                    <td className="border px-4 py-2">
-                      <button
-                        className="btn btn-primary"
-                        onClick={() => handleMultiSig(submission)}
-                      >
-                        Select
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            {multiSigStatus && (
-              <div className="mt-4">
-                <h3 className="text-xl font-semibold">
-                  {multiSigStatus}{" "}
-                  <a
-                    href="#"
-                    onClick={() => setShowModal(true)}
-                    className="text-blue-500 underline"
-                  >
-                    View
-                  </a>
-                </h3>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      {showModal && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg max-w-md w-full">
-            <h2 className="text-2xl font-semibold mb-4">Compliance Details</h2>
-            <div>
-              <h3 className="text-lg font-semibold">Compliant Areas</h3>
-              <ul className="list-disc pl-5">
-                {complianceDetails?.compliant.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-              <h3 className="text-lg font-semibold mt-4">
-                Non-compliant Areas
-              </h3>
-              <ul className="list-disc pl-5">
-                {complianceDetails?.nonCompliant.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            </div>
-            <button
-              onClick={() => setShowModal(false)}
-              className="mt-4 btn btn-secondary"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+      ) : (
+        <table>
+          <thead>
+            <tr>
+              <th>Budget</th>
+              <th>Duration</th>
+              <th>Material 1</th>
+              <th>Material 2</th>
+              <th>Select</th>
+            </tr>
+          </thead>
+          <tbody>
+            {formData.map((item, index) => (
+              <tr key={index}>
+                <td>{item.budget}</td>
+                <td>{item.duration}</td>
+                <td>{item.material1Name}</td>
+                <td>{item.material2Name}</td>
+                <td>
+                  <button onClick={() => handleSelect(index)}>Select</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </>
   );
 }
+
 
 export default AddTender;
