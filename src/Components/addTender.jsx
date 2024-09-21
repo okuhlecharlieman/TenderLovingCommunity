@@ -16,7 +16,7 @@ function AddTender() {
   const [multiSigStatus, setMultiSigStatus] = useState(null);
   const [complianceDetails, setComplianceDetails] = useState(null);
   const [showModal, setShowModal] = useState(false); // For showing compliance details
-
+const [comName, setName] = useState('');
   // Predefined array with 5 entries
   const submissions = [
     {
@@ -100,6 +100,8 @@ function AddTender() {
       setMultiSigStatus(compliance);
       setComplianceDetails(details); // Store details for viewing later
       setShowTable(false)
+      setName(selectedSubmission.name);
+      
     } else {
       alert("Multi-sig process is still pending!");
     }
@@ -348,6 +350,7 @@ function AddTender() {
         )}
      {multiSigStatus && (
               <div className="mt-4">
+                <p className="text-xl font-semibold">Company Name: {comName}</p>
                 <h3 className="text-xl font-semibold">
                   {multiSigStatus}{" "}
                   <a
